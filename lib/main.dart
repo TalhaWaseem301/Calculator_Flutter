@@ -112,7 +112,9 @@ class _CalculatorState extends State<Calculator> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                     ElevatedButton(
-                        onPressed: (){},
+                        onPressed: (){
+                          calculation('0');
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.grey, // Background color
                           padding: EdgeInsets.fromLTRB(34, 20, 128, 20), // Padding
