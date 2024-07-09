@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:expressions/expressions.dart';
 
 void main() => runApp(MyApp());
 
@@ -18,11 +19,15 @@ class Calculator extends StatefulWidget {
 }
 
 class _CalculatorState extends State<Calculator> {
+  String expression = '';
+
   Widget calcbutton(String btntxt, Color btncolor, Color txtcolor) {
     return Container(
       child: ElevatedButton(
         onPressed: () {
-          calculation(btntxt);
+          setState(() {
+            calculation(btntxt);
+          });
         },
         child: Text(
           btntxt,
@@ -64,8 +69,8 @@ class _CalculatorState extends State<Calculator> {
                     child: Padding(
                       padding: EdgeInsets.all(10.0),
                       child: Text(
-                        text,
-                        style: TextStyle(color: Colors.white, fontSize: 100),
+                        expression,
+                        style: TextStyle(color: Colors.white, fontSize: 50),
                       ),
                     ),
                   ),
@@ -125,7 +130,9 @@ class _CalculatorState extends State<Calculator> {
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    calculation('0');
+                    setState(() {
+                      calculation('0');
+                    });
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.grey, // Background color
@@ -143,123 +150,40 @@ class _CalculatorState extends State<Calculator> {
                 calcbutton('.', Colors.grey, Colors.white),
                 calcbutton('=', Colors.grey, Colors.white),
               ],
-            )
+            ),
           ],
         ),
       ),
     );
   }
 
-
-  // logic of calculator
-
-  //Calculator logic
-  dynamic text = '0';
-  double numOne = 0;
-  double numTwo = 0;
-
-  dynamic result = '';
-  dynamic finalResult = '';
-  dynamic opr = '';
-  dynamic preOpr = '';
-
-  void calculation(btnText) {
+  void calculation(String btnText) {
     if (btnText == 'AC') {
-      text = '0';
-      numOne = 0;
-      numTwo = 0;
-      result = '';
-      finalResult = '0';
-      opr = '';
-      preOpr = '';
-    } else if (opr == '=' && btnText == '=') {
-      if (preOpr == '+') {
-        finalResult = add();
-      } else if (preOpr == '-') {
-        finalResult = sub();
-      } else if (preOpr == 'x') {
-        finalResult = mul();
-      } else if (preOpr == '/') {
-        finalResult = div();
+      expression = '';
+    } else if (btnText == '=') {
+      try {
+        final evaluator = const ExpressionEvaluator();
+        Expression exp = Expression.parse(expression.replaceAll('x', '*'));
+        var result = evaluator.eval(exp, {});
+        expression = result.toString();
+      } catch (e) {
+        expression = 'Error';
       }
-    } else if (btnText == '+' ||
-        btnText == '-' ||
-        btnText == 'x' ||
-        btnText == '/' ||
-        btnText == '=') {
-      if (numOne == 0) {
-        numOne = double.parse(result);
-      } else {
-        numTwo = double.parse(result);
-      }
-
-      if (opr == '+') {
-        finalResult = add();
-      } else if (opr == '-') {
-        finalResult = sub();
-      } else if (opr == 'x') {
-        finalResult = mul();
-      } else if (opr == '/') {
-        finalResult = div();
-      }
-      preOpr = opr;
-      opr = btnText;
-      result = '';
-    } else if (btnText == '%') {
-      if (result.isNotEmpty) {
-        result = (double.parse(result) / 100).toString();
-        finalResult = doesContainDecimal(result);
-      }
-    } else if (btnText == '.') {
-      if (!result.toString().contains('.')) {
-        result = result.toString() + '.';
-      }
-      finalResult = result;
     } else if (btnText == '+/-') {
-      result.toString().startsWith('-')
-          ? result = result.toString().substring(1)
-          : result = '-' + result.toString();
-      finalResult = result;
+      if (expression.isNotEmpty) {
+        if (expression.startsWith('-')) {
+          expression = expression.substring(1);
+        } else {
+          expression = '-' + expression;
+        }
+      }
+    } else if (btnText == '%') {
+      if (expression.isNotEmpty) {
+        double value = double.tryParse(expression) ?? 0;
+        expression = (value / 100).toString();
+      }
     } else {
-      result = result + btnText;
-      finalResult = result;
+      expression += btnText;
     }
-
-    setState(() {
-      text = finalResult;
-    });
-  }
-
-  String add() {
-    result = (numOne + numTwo).toString();
-    numOne = double.parse(result);
-    return doesContainDecimal(result);
-  }
-
-  String sub() {
-    result = (numOne - numTwo).toString();
-    numOne = double.parse(result);
-    return doesContainDecimal(result);
-  }
-
-  String mul() {
-    result = (numOne * numTwo).toString();
-    numOne = double.parse(result);
-    return doesContainDecimal(result);
-  }
-
-  String div() {
-    result = (numOne / numTwo).toString();
-    numOne = double.parse(result);
-    return doesContainDecimal(result);
-  }
-
-  String doesContainDecimal(dynamic result) {
-    if (result.toString().contains('.')) {
-      List<String> splitDecimal = result.toString().split('.');
-      if (!(int.parse(splitDecimal[1]) > 0))
-        return result = splitDecimal[0].toString();
-    }
-    return result;
   }
 }
